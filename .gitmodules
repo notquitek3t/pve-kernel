@@ -1,3 +1,6 @@
 [submodule "submodules/zfsonlinux"]
 	path = submodules/zfsonlinux
 	url = ../zfsonlinux
+[submodule "submodules/ubuntu-kernel"]
+	path = submodules/ubuntu-kernel
+	url = https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
