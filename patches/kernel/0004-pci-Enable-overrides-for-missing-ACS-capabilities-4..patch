@@ -55,18 +55,18 @@ Signed-off-by: Thomas Lamprecht <t.lamprecht@proxmox.com>
  2 files changed, 111 insertions(+)
 
 diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 89f899cccf3875e0c085d33d1129a9ec0482a953..dfe0d1e400e2c8f62770510cb7ad35c5060535cf 100644
+index 3872bc6ec49d..77c3c9a15518 100644
 --- a/Documentation/admin-guide/kernel-parameters.txt
 +++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -4422,6 +4422,15 @@
- 				Also, it enforces the PCI Local Bus spec
- 				rule that those bits should be 0 in system reset
- 				events (useful for kexec/kdump cases).
+@@ -4481,6 +4481,15 @@
+ 		nomsi		[MSI] If the PCI_MSI kernel config parameter is
+ 				enabled, this kernel boot option can be used to
+ 				disable the use of MSI interrupts system-wide.
 +		pci_acs_override =
 +				[PCIE] Override missing PCIe ACS support for:
 +				downstream
 +					All downstream ports - full ACS capabilities
-+				multifunction
++					multifunction
 +					Add multifunction devices - multifunction ACS subset
 +				id:nnnn:nnnn
 +					Specific device - full ACS capabilities
@@ -75,10 +75,10 @@ index 89f899cccf3875e0c085d33d1129a9ec0482a953..dfe0d1e400e2c8f62770510cb7ad35c5
  				Safety option to keep boot IRQs enabled. This
  				should never be necessary.
 diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index ba021ba458a7d0e5b92a0a87a50ef18805c48246..bc35fd0e9b4beb10edaf71c6a854be7e01aac336 100644
+index 76f4df75b08a..59afc2056873 100644
 --- a/drivers/pci/quirks.c
 +++ b/drivers/pci/quirks.c
-@@ -287,6 +287,106 @@ static int __init pci_apply_final_quirks(void)
+@@ -304,6 +304,106 @@ static int __init pci_apply_final_quirks(void)
  }
  fs_initcall_sync(pci_apply_final_quirks);
  
@@ -185,7 +185,7 @@ index ba021ba458a7d0e5b92a0a87a50ef18805c48246..bc35fd0e9b4beb10edaf71c6a854be7e
  /*
   * Decoding should be disabled for a PCI device during BAR sizing to avoid
   * conflict. But doing so may cause problems on host bridge and perhaps other
-@@ -5100,6 +5200,8 @@ static const struct pci_dev_acs_enabled {
+@@ -5108,6 +5208,8 @@ static const struct pci_dev_acs_enabled {
  	{ PCI_VENDOR_ID_CAVIUM, 0xA060, pci_quirk_mf_endpoint_acs },
  	/* APM X-Gene */
  	{ PCI_VENDOR_ID_AMCC, 0xE004, pci_quirk_xgene_acs },
@@ -194,3 +194,4 @@ index ba021ba458a7d0e5b92a0a87a50ef18805c48246..bc35fd0e9b4beb10edaf71c6a854be7e
  	/* Ampere Computing */
  	{ PCI_VENDOR_ID_AMPERE, 0xE005, pci_quirk_xgene_acs },
  	{ PCI_VENDOR_ID_AMPERE, 0xE006, pci_quirk_xgene_acs },
+
