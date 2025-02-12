@@ -1,8 +1,8 @@
-proxmox-kernel-6.13 (6.13.0-4) UNRELEASED; urgency=medium
-  * Updated sources to Vanilla 6.13.0
-  * Updated bcachefs to 11fe16cf3622b5995048bd9597e9d574e3b5530d
+proxmox-kernel-6.14 (6.14.0-1) UNRELEASED; urgency=medium
+  * Updated sources to Vanilla 6.14-rc1
+  * Updated bcachefs to 63bbe0ca416791095c994aba7bea388e947dd60a
 
- -- Krzysztof Hajdamowicz <krzysztof@hajdamowicz.info>  Sun, 02 Feb 2025 12:34:26 +0000
+ -- Krzysztof Hajdamowicz <krzysztof@hajdamowicz.info>  Tue, 04 Feb 2025 09:59:52 +0000
 
 proxmox-kernel-6.13 (6.13.0-1) bookworm; urgency=medium
 
