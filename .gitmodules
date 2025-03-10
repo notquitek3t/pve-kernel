@@ -1,6 +1,6 @@
 [submodule "submodules/zfsonlinux"]
 	path = submodules/zfsonlinux
-	url = ../zfsonlinux
+	url = https://github.com/KrzysztofHajdamowicz/pve-kernel-zfsonlinux.git
 [submodule "submodules/ubuntu-kernel"]
 	path = submodules/ubuntu-kernel
-	url = https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+	url = https://github.com/KrzysztofHajdamowicz/mirror_ubuntu-kernels.git
