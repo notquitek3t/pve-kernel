@@ -125,6 +125,8 @@ jobs:
             ${{ runner.os }}-ubuntu-kernel-
       - name: Prepare kernel source tree
         run: |
+          git config --global user.email "<>"
+          git config --global user.name "Github Actions workflow"
           make submodule
           cd submodules/ubuntu-kernel
           git remote add kernel https://github.com/torvalds/linux.git
