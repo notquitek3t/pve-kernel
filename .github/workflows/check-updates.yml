@@ -125,15 +125,12 @@ jobs:
             ${{ runner.os }}-ubuntu-kernel-
       - name: Prepare kernel source tree
         run: |
-          git config --global user.email "<>"
-          git config --global user.name "Github Actions workflow"
           make submodule
           cd submodules/ubuntu-kernel
           git remote add kernel https://github.com/torvalds/linux.git
           git fetch kernel
           git remote add bcachefs git://evilpiepirate.org/bcachefs.git
           git fetch bcachefs
-          git remote -v
       - name: Save submodules to cache
         id: cache-submodules-save
         uses: actions/cache/save@v4
@@ -142,6 +139,8 @@ jobs:
           key: ${{ steps.cache-submodules-restore.outputs.cache-primary-key }}
       - name: Checkout kernel tree
         run: |
+          git config --global user.email "<>"
+          git config --global user.name "Github Actions workflow"
           cd submodules/ubuntu-kernel
           git checkout build
           git reset --hard ${{ needs.check.outputs.kernel_tag }}
