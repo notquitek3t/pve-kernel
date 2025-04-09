@@ -116,9 +116,10 @@ jobs:
           submodules: 'false' # we'll checkout manually
           fetch-depth: 1
       - name: Restore kernel source tree from cache
-        uses: actions/cache@v4
+        id: cache-submodules-restore
+        uses: actions/cache/restore@v4
         with:
-          path: submodules/ubuntu-kernel
+          path: submodules/
           key: ${{ runner.os }}-ubuntu-kernel-${{ needs.check.outputs.kernel_tag }}-${{ needs.check.outputs.bcachefs_commit }}
           restore-keys: |
             ${{ runner.os }}-ubuntu-kernel-
@@ -130,6 +131,12 @@ jobs:
           git fetch kernel
           git remote add bcachefs git://evilpiepirate.org/bcachefs.git
           git fetch bcachefs
+      - name: Save submodules to cache
+        id: cache-submodules-save
+        uses: actions/cache/save@v4
+        with:
+          path: submodules/
+          key: ${{ steps.cache-submodules-restore.outputs.cache-primary-key }}
       - name: Checkout kernel tree
         run: |
           cd submodules/ubuntu-kernel
