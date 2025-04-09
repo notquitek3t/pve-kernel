@@ -2,31 +2,98 @@ name: Check Kernel and Bcachefs Updates
 
 on:
   schedule:
-    - cron: '0 */2 * * *'  # everyday every two hours
-  workflow_dispatch:
+    - cron: '0 */2 * * *'  # every day, every two hours
+  workflow_dispatch: # Allows manual triggering
 
 jobs:
   check:
     runs-on: ubuntu-latest
+    outputs:
+      # Output whether changes were detected for potential use in downstream jobs
+      changed: ${{ steps.compare.outputs.changed }}
+      kernel_tag: ${{ steps.kernel.outputs.LATEST_TAG }}
+      bcachefs_commit: ${{ steps.bcachefs.outputs.LATEST_COMMIT }}
     steps:
+    # No checkout needed if only interacting with external git repos and artifacts
+
     - name: Fetch latest Linux kernel tag
       id: kernel
       run: |
-        tag=$(git ls-remote --tags https://github.com/torvalds/linux.git | grep -o 'refs/tags/v[0-9.]*$' | sort -V | tail -n1 | awk -F/ '{print $3}')
+        # Fetch the latest tag matching vX.Y or vX.Y.Z format
+        tag=$(git ls-remote --tags --sort='v:refname' https://github.com/torvalds/linux.git 'refs/tags/v[0-9]*' | grep -o 'refs/tags/v[0-9.]*$' | tail -n1 | awk -F/ '{print $3}')
+        echo "Fetched kernel tag: $tag"
+        # Output the tag for other steps/jobs
         echo "LATEST_TAG=$tag" >> $GITHUB_OUTPUT
+        # Save the tag to a file for artifact upload
         echo "$tag" > linux-tag.txt
 
     - name: Fetch latest bcachefs commit
       id: bcachefs
       run: |
+        # Fetch the commit hash of the master branch
         commit=$(git ls-remote https://evilpiepirate.org/git/bcachefs.git refs/heads/master | cut -f1)
+        echo "Fetched bcachefs commit: $commit"
+        # Output the commit hash for other steps/jobs
         echo "LATEST_COMMIT=$commit" >> $GITHUB_OUTPUT
+        # Save the commit hash to a file for artifact upload
         echo "$commit" > bcachefs-commit.txt
 
-    - name: Upload artifacts
+    - name: Download previous artifact info
+      # Uses an action to easily download artifacts from previous workflow runs
+      uses: dawidd6/action-download-artifact@v6
+      with:
+        # Specify the workflow name or ID (using github context)
+        workflow: ${{ github.workflow_id }}
+        # Specify the branch the workflow ran on
+        branch: ${{ github.ref_name }}
+        # Name of the artifact to download
+        name: kernel-update-info
+        # Directory to download the artifact contents to
+        path: previous-info
+        # If no artifact is found (e.g., first run), ignore the error
+        if_no_artifact_found: ignore
+
+    - name: Compare current and previous versions
+      id: compare
+      run: |
+        CURRENT_TAG=$(cat linux-tag.txt)
+        CURRENT_COMMIT=$(cat bcachefs-commit.txt)
+
+        # Read previous values, default to empty string if files don't exist
+        PREVIOUS_TAG=$(cat previous-info/linux-tag.txt 2>/dev/null || echo "")
+        PREVIOUS_COMMIT=$(cat previous-info/bcachefs-commit.txt 2>/dev/null || echo "")
+
+        echo "Current Tag: $CURRENT_TAG, Previous Tag: $PREVIOUS_TAG"
+        echo "Current Commit: $CURRENT_COMMIT, Previous Commit: $PREVIOUS_COMMIT"
+
+        # Compare current values with previous ones
+        if [[ "$CURRENT_TAG" != "$PREVIOUS_TAG" || "$CURRENT_COMMIT" != "$PREVIOUS_COMMIT" ]]; then
+          echo "Changes detected."
+          # Set output 'changed' to true
+          echo "changed=true" >> $GITHUB_OUTPUT
+        else
+          echo "No changes detected."
+          # Set output 'changed' to false
+          echo "changed=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Upload current info artifact if changed
+      # This step only runs if the 'compare' step output 'changed' is 'true'
+      if: steps.compare.outputs.changed == 'true'
       uses: actions/upload-artifact@v4
       with:
         name: kernel-update-info
+        # Upload the newly fetched values
         path: |
           linux-tag.txt
           bcachefs-commit.txt
+        # Optional: Set artifact retention period
+        retention-days: 90
+
+    - name: Report status
+      run: |
+        if [[ "${{ steps.compare.outputs.changed }}" == "true" ]]; then
+          echo "::notice title=Update Detected::Kernel tag or bcachefs commit changed. New artifact uploaded. Kernel: ${{ steps.kernel.outputs.LATEST_TAG }}, Bcachefs: ${{ steps.bcachefs.outputs.LATEST_COMMIT }}"
+        else
+          echo "::notice title=No Update::No changes detected in kernel tag or bcachefs commit."
+        fi
