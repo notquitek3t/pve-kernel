@@ -20,7 +20,7 @@ jobs:
       id: kernel
       run: |
         # Fetch the latest tag matching vX.Y or vX.Y.Z format
-        tag=$(git ls-remote --tags --sort='v:refname' https://github.com/torvalds/linux.git 'refs/tags/v[0-9]*' | grep -o 'refs/tags/v[0-9.]*$' | tail -n1 | awk -F/ '{print $3}')
+        tag=$(git ls-remote --tags --sort='v:refname' https://github.com/torvalds/linux.git 'refs/tags/v[0-9]*' | grep -o 'refs/tags/v[rc0-9.-]*$' | tail -n1 | awk -F/ '{print $3}')
         echo "Fetched kernel tag: $tag"
         # Output the tag for other steps/jobs
         echo "LATEST_TAG=$tag" >> $GITHUB_OUTPUT
