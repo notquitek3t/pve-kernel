@@ -97,3 +97,53 @@ jobs:
         else
           echo "::notice title=No Update::No changes detected in kernel tag or bcachefs commit."
         fi
+  kernel-build:
+    # This job depends on the 'check' job completing successfully
+    needs: check
+    # This job only runs if the 'check' job detected changes
+    if: needs.check.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Display Triggering Versions
+        run: |
+          echo "Triggered by Kernel Tag: ${{ needs.check.outputs.kernel_tag }}"
+          echo "Triggering Bcachefs Commit: ${{ needs.check.outputs.bcachefs_commit }}"
+
+      - name: Checkout pve-kernel repository
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          submodules: 'false' # we'll checkout manually
+          fetch-depth: 1
+      - name: Restore kernel source tree from cache
+        uses: actions/cache@v4
+        with:
+          path: submodules/ubuntu-kernel
+          key: ${{ runner.os }}-ubuntu-kernel-${{ needs.check.outputs.kernel_tag }}-${{ needs.check.outputs.bcachefs_commit }}
+          restore-keys: |
+            ${{ runner.os }}-ubuntu-kernel-
+      - name: Prepare kernel source tree
+        run: |
+          make submodule
+          cd submodules/ubuntu-kernel
+          git remote add kernel https://github.com/torvalds/linux.git
+          git fetch kernel
+          git remote add bcachefs git://evilpiepirate.org/bcachefs.git
+          git fetch bcachefs
+      - name: Checkout kernel tree
+        run: |
+          cd submodules/ubuntu-kernel
+          git checkout build
+          git reset --hard kernel/${{ needs.check.outputs.kernel_tag }}
+          git merge bcachefs/master
+          git cherry-pick db8c6307a68d51da32cb1e884ce35de6f5912e7a
+
+      - name: Verify Checkout and Submodules
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "Files in checkout:"
+          ls -la
+          echo "Git status:"
+          git status
+          echo "Submodule status:"
+          git submodule status
