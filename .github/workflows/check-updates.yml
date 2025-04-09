@@ -119,7 +119,9 @@ jobs:
         id: cache-submodules-restore
         uses: actions/cache/restore@v4
         with:
-          path: submodules/
+          path: |
+            submodules/
+            .git/modules
           key: ${{ runner.os }}-ubuntu-kernel-${{ needs.check.outputs.kernel_tag }}-${{ needs.check.outputs.bcachefs_commit }}
           restore-keys: |
             ${{ runner.os }}-ubuntu-kernel-
@@ -135,7 +137,9 @@ jobs:
         id: cache-submodules-save
         uses: actions/cache/save@v4
         with:
-          path: submodules/
+          path: |
+            submodules/
+            .git/modules/
           key: ${{ steps.cache-submodules-restore.outputs.cache-primary-key }}
       - name: Checkout kernel tree
         run: |
