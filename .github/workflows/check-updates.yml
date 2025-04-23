@@ -145,11 +145,14 @@ jobs:
         run: |
           git config --global user.email "<>"
           git config --global user.name "Github Actions workflow"
+          OLDPWD=$(pwd)
           cd submodules/ubuntu-kernel
-          git checkout build
-          git reset --hard ${{ needs.check.outputs.kernel_tag }}
-          git merge bcachefs/master
+          git checkout origin/build
+          git reset --hard kernel/${{ needs.check.outputs.kernel_tag }}
+          git merge bcachefs/master --no-edit
           git cherry-pick db8c6307a68d51da32cb1e884ce35de6f5912e7a
+          cd ${OLDPWD}
+          cat Makefile
 
       - name: Verify Checkout and Submodules
         run: |
